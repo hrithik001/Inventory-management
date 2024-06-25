@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  delivery_date: 2024-06-22 18:44:06
+  expected_delivery_date: 2024-06-22 18:44:06
+  user: one
+  status: MyString
+  total_amount: 9.99
+  user: one
+
+two:
+  delivery_date: 2024-06-22 18:44:06
+  expected_delivery_date: 2024-06-22 18:44:06
+  user: two
+  status: MyString
+  total_amount: 9.99
+  user: two

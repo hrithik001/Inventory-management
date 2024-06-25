@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  inventory: one
+  transition_type: MyString
+  quantity: 1
+  transition_date: 2024-06-24 12:24:36
+
+two:
+  inventory: two
+  transition_type: MyString
+  quantity: 1
+  transition_date: 2024-06-24 12:24:36

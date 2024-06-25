@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  customer_order: one
+  variant: one
+  ordered_quantity: 1
+  supplied_quantity: 1
+
+two:
+  customer_order: two
+  variant: two
+  ordered_quantity: 1
+  supplied_quantity: 1

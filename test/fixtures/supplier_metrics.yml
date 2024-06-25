@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  supplier: one
+  delivery_time_rating: 1
+  order_accuracy_rating: 1
+  order: one
+
+two:
+  supplier: two
+  delivery_time_rating: 1
+  order_accuracy_rating: 1
+  order: two

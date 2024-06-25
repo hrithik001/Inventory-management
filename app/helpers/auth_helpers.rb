@@ -17,6 +17,7 @@ module AuthHelpers
             puts "Payload data: #{payload.inspect}"
             user_id = payload['user_id']
             Current.user = User.find(user_id)
+            puts "current user --> #{Current.user.inspect}"
   
             if Current.user.nil?
               error!('Unauthorized - - User account is inactive', 401)
@@ -37,6 +38,14 @@ module AuthHelpers
     def authenticate_admin!
       
       error!('403 Forbidden', 403) unless Current.user.role == 'RETAILER'
+    end
+
+    def authenticate_supplier!
+      error!('Forbidden', 403) unless Current.user.role == 'SUPPLIER'
+    end
+    def authenticate_retailer!
+      
+      error!('403 Forbidden , role is not allowed for this action', 403) unless Current.user.role == 'RETAILER'
     end
   end
   
