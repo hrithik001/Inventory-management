@@ -4,14 +4,20 @@ class Inventory < ApplicationRecord
   
 
   def decrease_quantity(quantity)
-    puts "-----------------------------------decrementing quantity inside inventory by #{quantity}-------------------------------------"
+    puts "************************ previous quantity - #{self.quantity_available}****************************************"
+    puts "************************ decrases by - #{quantity}****************************************"
     self.update(quantity_available: quantity_available - quantity)
+    puts "************************ updated quantity - #{self.quantity_available}****************************************"
+   
   end
 
   def increase_quantity(quantity)
-    puts "-----------------------------------incrementing quantity inside inventory by #{quantity}-------------------------------------"
+    
     current_quantity = quantity_available || 0
+    puts "************************ previous quantity - #{current_quantity}****************************************"
+    puts "************************ increase by - #{quantity}****************************************"
     update(quantity_available: current_quantity + quantity)
+    puts "************************ updated quantity - #{self.quantity_available}****************************************"
   end
 
   

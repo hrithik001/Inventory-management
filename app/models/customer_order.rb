@@ -22,6 +22,16 @@ class CustomerOrder < ApplicationRecord
 
     def self.create_new(params)
 
+        # check at db, can we have sufficient quantity ?
+        
+        can_fullfill = check_variant_availability(params)
+
+        puts can_fullfill.inspect, "******************************************************************************"
+
+        if can_fullfill.any?
+          return { insufficient_variants: can_fullfill }
+        end
+
         ActiveRecord::Base.transaction do
           order = CustomerOrder.new(
             delivery_date: nil,
@@ -32,6 +42,7 @@ class CustomerOrder < ApplicationRecord
             status: "PENDING",
             total_amount: 0.00
           )
+          
           
           if order.save
             puts "Order details -> #{params[:products].inspect}------------------"
@@ -44,10 +55,10 @@ class CustomerOrder < ApplicationRecord
               
               
                 variant = Variant.find_by(id: variant_id)
-                error!('Order variant not found', 404) unless variant
+                
 
                 variant_price = VariantPrice.find_by(variant_id: variant_id)
-                error!('Variant price not found', 404) unless variant_price
+                raise ActiveRecord::RecordInvalid.new(self), "price is not decided for this variant #{variant.inspect}" unless variant_price
 
                 selling_price = variant_price.selling_price
                 base_price = variant_price.base_price
@@ -69,6 +80,58 @@ class CustomerOrder < ApplicationRecord
           order
         end
         
+    end
+
+    def self.check_variant_availability(params)
+      insufficient_variants = []
+  
+      params[:products].each do |product_params|
+        variant = Variant.find_by(id: product_params[:variant_id])
+        if variant
+          unless variant&.is_quantity_available?(product_params[:ordered_quantity])
+            insufficient_variants << { variant_id: variant.id, requested_quantity: product_params[:ordered_quantity], available_quantity: variant.quantity_available }
+          end
+        else
+          insufficient_variants << { variant_id: product_params[:variant_id], status: "variant not exists"} 
+        end
+        
+      end
+  
+      insufficient_variants
+    end
+
+    def update_status(status)
+      self.update(status: status)
+    end
+
+    def manage_order(status)
+      
+      return update_status(status) if status == 'CANCELLED'
+      
+      fulfill_order  #create a inventory transistion 'out' and also maintain the quantity count of variant in inventory
+      update_status(status) # update to shipped
+      self.update(delivery_date: DateTime.now)
+
+
+    end
+
+    def fulfill_order
+      self.customer_order_variants.each do |order_variant|
+        variant = Variant.find(order_variant.variant_id)
+        inventory = variant.inventories.find_by(user_id: self.retailer_id)
+  
+        # inventory.update(quantity_available: inventory.quantity_available - order_variant.ordered_quantity)
+        inventory.decrease_quantity(order_variant.ordered_quantity)
+        InventoryTransition.create!(
+          transition_type: 'OUT',
+          quantity: order_variant.ordered_quantity,
+          transition_date: DateTime.now,
+          variant_id: variant.id,
+          retailer_id: self.retailer_id
+        )
+  
+        order_variant.update(supplied_quantity: order_variant.ordered_quantity)
+      end
     end
 
 

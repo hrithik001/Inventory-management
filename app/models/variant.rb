@@ -5,6 +5,7 @@ class Variant < ApplicationRecord
   has_many :order_variant
   has_many :orders, through: :order_variant
   has_many :customer_order_variants
+  has_many :inventories
 
 
   
@@ -27,6 +28,14 @@ class Variant < ApplicationRecord
     profit_margin = 20
     
     average_selling_price * (1 + profit_margin / 100.0)
+  end
+
+  def quantity_available
+    inventories.sum(:quantity_available)
+  end
+
+  def is_quantity_available?(requested_quantity)
+    quantity_available >= requested_quantity
   end
 
 

@@ -30,16 +30,29 @@ class Api::V1::CustomerOrder < Grape::API
             
             order = CustomerOrder.create_new(params)
     
-            if !order.persisted?
-                error!(order.errors.full_messages.to_json, 422)
+            # result = CustomerOrder.create_new(params)
+
+          if order.is_a?(CustomerOrder)
+            if order.persisted?
+              { order: order}
+            else
+              error!(order.errors.full_messages.to_json, 422)
             end
-    
-            # present order, with: Entities::Order
-            {
-                order: order
-            }
+          else
+            error!({ error: "Insufficient quantity for some variants", details: order[:insufficient_variants] }, 422)
+          end
         end
 
+        params do
+            requires :status, type: String, desc: "customer order status"
+        end
+        put ":id" do
+            customer_order = CustomerOrder.find_by(id: params[:id])
+            status = params[:status]
+            customer_order.manage_order(status)
+
+
+        end
 
 
     end
