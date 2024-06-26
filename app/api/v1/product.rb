@@ -26,16 +26,18 @@ class Api::V1::Product < Grape::API
         params do
             requires :name, type: String
             requires :description,type: String
+            requires :categories, type: Array[String]
+
         end
 
         post do
             authenticate_retailer!
-            product = Product.create!(
-                name: params[:name],
-                description: params[:description]
-            )
 
-            if product.save
+            product =  Product.create_product(params)
+
+            
+
+            if product.persisted?
                 present product, with: Entities::Product
             else
                 error!("product not created",401)
@@ -48,17 +50,20 @@ class Api::V1::Product < Grape::API
             optional :name, type: String
             optional :description, type: String
         end
-        put "id" do
+        put ":id" do
 
             authenticate_retailer!
             
-            product = Product.find_by(id)
+            product = Product.find_by(id: params[:id])
 
             product.update(params)
             present :product, with: Entities::Product
         end
 
+        private 
+
         
+          
 
 
     end

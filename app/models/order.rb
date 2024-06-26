@@ -29,7 +29,8 @@ class Order < ApplicationRecord
 
   def self.create_new(params)
 
-    order = Order.new(
+
+    order = self.new(
       delivery_date: nil,
       order_date: DateTime.now,
       expected_delivery_date: DateTime.now + 3,
@@ -39,17 +40,22 @@ class Order < ApplicationRecord
       total_amount: 0.00
 
     )
+    puts order.inspect , "#############################################"
+    puts "order saving %%%%%%%%%%%%%%%%%%%%%%%%%% #{order.save}"
+    if order.save
 
-    order.save
+      params[:products].each do |product_params|
+        variant_id = product_params[:variant_id]
+        ordered_quantity = product_params[:ordered_quantity]
 
-    params[:products].each do |product_params|
-      variant_id = product_params[:variant_id]
-      ordered_quantity = product_params[:ordered_quantity]
-
-      order.order_variant.create!(
-        variant_id: variant_id,
-        ordered_quantity: ordered_quantity
-      )
+        order.order_variant.create!(
+          variant_id: variant_id,
+          ordered_quantity: ordered_quantity
+        )
+      end
+    else
+      puts "Order not saved %%%%%%%%%%%%%%%%%%%%%%%%%%"
+      puts order.errors.full_messages.to_json
     end
 
 
@@ -110,9 +116,11 @@ class Order < ApplicationRecord
       base_price = variant.price
 
 
-      base_price = variant.price
 
-      average_selling_price = variant.calculate_average_selling_price  
+      average_selling_price = variant.calculate_average_selling_price
+      if average_selling_price == 0
+        average_selling_price = base_price
+      end
       selling_price = variant.calculate_selling_price(average_selling_price)
 
       puts " for variant #{variant.id}"

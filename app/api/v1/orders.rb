@@ -81,18 +81,23 @@ class Api::V1::Orders < Grape::API
 
     desc "Create a new order"
     params do
-      requires :supplier_id, type: Integer, desc: "Supplier ID"
-      requires :products, type: Array[Hash], desc: "Array of product variants"
+      requires :supplier_id, type: Integer
+      requires :products, type: Array do
+        requires :variant_id, type: Integer
+        requires :ordered_quantity, type: Integer
+      end
     end
     post do
       authenticate_retailer!
         order = Order.create_new(params)
 
-        if !order.persisted?
-          error!(order.errors.full_message.to_json,422)
+        if order.is_a?(Array) 
+          error!(order.to_json, 422)
+        elsif order.persisted?
+          present order, with: Entities::Order
+        else
+          error!("Order not created", 401)
         end
-
-        present order, with: Entities::Order
     end
 
       
