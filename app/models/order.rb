@@ -10,6 +10,7 @@ class Order < ApplicationRecord
   has_many :order_variant, dependent: :destroy
  
   def self.get_orders(status)
+    puts "inside order function"
     orders = if Current.user.role == 'RETAILER'
                 if status
                     Order.where(retailer_id: Current.user, status: status)
@@ -17,6 +18,7 @@ class Order < ApplicationRecord
                     Order.where(retailer_id: Current.user)
                 end
               elsif Current.user.role == 'SUPPLIER'
+                puts "inside suppleir"
                 if status
                   Order.where(supplier_id: Current.user,status: status)
                 else
@@ -29,7 +31,7 @@ class Order < ApplicationRecord
 
   def self.create_new(params)
 
-
+    return if valid_supplier?(params[:supplier_id])
     order = self.new(
       delivery_date: nil,
       order_date: DateTime.now,
@@ -76,7 +78,8 @@ class Order < ApplicationRecord
 
             order_variant = self.order_variant.find_by(variant_id: supplied[:variant_id])
             puts "-----------------------------variant got #{self.order_variant.inspect}- #{supplied[:variant_id]}----------------------------"
-            return create_new_error("variant not exists") unless order_variant
+            # return create_new_error("variant not exists") unless order_variant
+            return { error: "variant not exists" } unless order_variant
 
             order_variant.update!(supplied_quantity: supplied[:supplied_quantity])
             
@@ -116,11 +119,9 @@ class Order < ApplicationRecord
       base_price = variant.price
 
 
-
-      average_selling_price = variant.calculate_average_selling_price
-      if average_selling_price == 0
-        average_selling_price = base_price
-      end
+      
+      average_selling_price = variant.calculate_average_selling_price 
+     
       selling_price = variant.calculate_selling_price(average_selling_price)
 
       puts " for variant #{variant.id}"
@@ -151,11 +152,21 @@ class Order < ApplicationRecord
     
   end
 
-  def self.create_new_error(error_message)
-    order = new
-    # puts "-----------creating a new error---------------"
-    order.errors.add(:base, error_message)
-    usorderer
+
+  def self.shipped_orders
+    Order.where(retailer_id: Current.user,status: 'SHIPPED')
+  end
+
+  def self.valid_supplier?(supplier_id)
+    
+    supplier = Supplier.find_by(user_id: supplier_id)
+    return true if !supplier
+    supplier.contract.valid_upto < DateTime.now 
+
+  end
+
+  def self.shipped_orders
+    Order.where(retailer_id: Current.user, status: "SHIPPED")
   end
 
 end

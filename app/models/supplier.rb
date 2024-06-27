@@ -1,5 +1,6 @@
 class Supplier < ApplicationRecord
   belongs_to :user
+  has_one :contract, dependent: :destroy
   has_many :supplier_metrics, dependent: :destroy
 
   def update_average_ratings
@@ -13,5 +14,16 @@ class Supplier < ApplicationRecord
     puts "-------------order accuracy #{self.order_accuracy}------------------------"
     save!
   end
+  def self.get_user
+    self.find_by(user_id: Current.user)
+  end
+
+  # def self.get_data(status)
+  #   if status
+  #     Order.where(supplier_id: Current.user,status: status)
+  #   else
+  #     Order.where(supplier_id: Current.user,status: 'PENDING')
+  #   end
+  # end
 
 end

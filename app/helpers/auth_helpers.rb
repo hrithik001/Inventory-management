@@ -43,9 +43,14 @@ module AuthHelpers
     def authenticate_supplier!
       error!('Forbidden', 403) unless Current.user.role == 'SUPPLIER'
     end
+
     def authenticate_retailer!
       
       error!('403 Forbidden , role is not allowed for this action', 403) unless Current.user.role == 'RETAILER'
+    end
+    def authenticate_customer!
+      
+      error!('403 Forbidden , role is not allowed for this action', 403) unless Current.user.role == 'CUSTOMER'
     end
   end
   

@@ -20,5 +20,10 @@ class Inventory < ApplicationRecord
     puts "************************ updated quantity - #{self.quantity_available}****************************************"
   end
 
+  def self.get_inventory
+    Inventory.where(user_id: Current.user)
+  end
+
+
   
 end

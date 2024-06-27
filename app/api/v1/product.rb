@@ -1,19 +1,36 @@
 class Api::V1::Product < Grape::API 
     helpers AuthHelpers
+
     resources :product do 
         before do
             authenticate!
         end
 
         desc "get all product"
+        params do 
+            optional :page, type: Integer, default: 1, desc: "Page number"
+            optional :per_page, type: Integer, default: 5, desc: "Product per page"
+            optional :query, type: String, desc: "Search query"
+        end
         get do
-            products = Product.all
+            search_conditions = {
+                id_eq: params[:query],
+                name_cont: params[:query],
+                description_cont: params[:query]
+            }
+            page = params[:page]
+            per_page = params[:per_page]
+
+            product = Product.ransack(search_conditions.merge(m: 'or')).result
+            product = paginate(product) 
 
             if Current.user&.role == "RETAILER"
-                present products,  with: Entities::Product
+                present product,  with: Entities::Product
             else
-                present products, with: Entities::ProductWithPrice
+                present product, with: Entities::ProductWithPrice
             end
+
+            # ?query=1
         end
 
         desc "get a product"
@@ -29,13 +46,10 @@ class Api::V1::Product < Grape::API
             requires :categories, type: Array[String]
 
         end
-
         post do
             authenticate_retailer!
 
             product =  Product.create_product(params)
-
-            
 
             if product.persisted?
                 present product, with: Entities::Product
@@ -44,6 +58,36 @@ class Api::V1::Product < Grape::API
             end
 
         end
+
+        desc "delete product only if not having dependency"
+        delete ":id" do
+            authenticate_retailer!
+
+            product = Product.find_by(id: params[:id])
+  
+            if product
+              ActiveRecord::Base.transaction do
+              
+                if product.variant.exists?
+                  error!({ error: 'Delete variants first' }, 422)
+                end
+                
+                
+                product.categories.destroy_all
+                
+                
+                if product.destroy
+                  { status: 'deleted' }
+                else
+                  error!({ error: 'Unable to delete product' }, 422)
+                end
+              end
+            else
+              error!({ error: 'Product not found' }, 404)
+            end
+
+        end
+      
 
         desc "Edit a product"
         params do
@@ -55,12 +99,19 @@ class Api::V1::Product < Grape::API
             authenticate_retailer!
             
             product = Product.find_by(id: params[:id])
-
-            product.update(params)
-            present :product, with: Entities::Product
+            
+            if product.nil?
+                error!({ error: 'Product not found' }, 404)
+            end
+    
+            if product.update_product(declared(params, include_missing: false))
+                present :product, product, with: Entities::Product
+            else
+                error!({ error: 'Failed to update product', details: product.errors.full_messages }, 422)
+            end
         end
 
-        private 
+       
 
         
           

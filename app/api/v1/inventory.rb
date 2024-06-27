@@ -1,16 +1,19 @@
 class Api::V1::Inventory < Grape::API 
     helpers AuthHelpers
+
     resources :inventory do
         before do
-            # authenticate_retailer!
             authenticate!
+            authenticate_retailer!
+           
         end
 
         desc "get Inventory"
+       
         get do
-            inventories = Inventory.all
+            inventories = Inventory.get_inventory
 
-          present inventories, with: Entities::Inventory
+            present inventories, with: Entities::Inventory
         end
 
         desc "get all Transitions"
@@ -25,17 +28,11 @@ class Api::V1::Inventory < Grape::API
             page = params[:page] || 1
             per_page = params[:per_page] || Kaminari.config.default_per_page
             transition_type = params[:type]
-            transistions = InventoryTransition.search(transition_type).page(page).per(per_page)
-
-            {  transistions: transistions,
-            type: transition_type,
-                pagination: {
-                current_page: transistions.current_page,
-                total_pages: transistions.total_pages,
-                total_items: transistions.total_count,
-                per_page: transistions.limit_value
-                }
-        }
+            transistions = InventoryTransition.search(transition_type)
+            transitions = paginate(transistions)
+            present transitions, with: Api::Entities::Transistion
+            
+        
         end
     end
 

@@ -1,5 +1,5 @@
 module Entities
-    class Order < Grape::Entity
+    class CustomerOrderDetails < Grape::Entity
      expose :id
      expose :delivery_date
      expose :order_date
@@ -7,7 +7,7 @@ module Entities
      expose :retailer_id 
      expose :status
      expose :total_amount
-    #  expose :order_variant, using: Entities::OrderVariant
+     expose :customer_order_variants, using: Entities::OrderVariant
     end
     
   end

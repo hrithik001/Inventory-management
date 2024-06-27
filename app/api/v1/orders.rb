@@ -3,36 +3,53 @@ class Api::V1::Orders < Grape::API
   resources :orders do
       before do
           authenticate!
+          authenticate_retailer!
       end
 
 
         
     desc "get order's list"
     params do
+      optional :page, type: Integer, default: 1, desc: "Page number"
+      optional :per_page, type: Integer, default: 5, desc: "orders per page"
       optional :status , type: String
     end
     get do
+        page = params[:page] || 1
+        per_page = params[:per_page] || 5
         status = params[:status]
         order = Order.get_orders(status)
+        order = paginate(order)
 
         present order,with: Entities::Order
     end
 
     desc "get shipped orderes"
+    params do
+      optional :page, type: Integer, default: 1, desc: "Page number"
+      optional :per_page, type: Integer, default: 5, desc: "orders per page"
+    end
+
     get "shipped" do
-      authenticate_retailer!
+      
 
-      order = Order.where(retailer_id: Current.user, status: "SHIPPED")
+      page = params[:page] || 1
+      per_page = params[:per_page] || 5
+      order = Order.shipped_orders
+      order = paginate(order)
 
+
+      
+     
       present order, with: Entities::Order
-
+     
     end
 
     desc "get particular shipped order details"
     get "shipped/:id" do
-        order = Order.where(id: params[:id],status: "SHIPPED")
+        order = Order.shipped_orders
 
-        present order, with: Entities::Order
+        present order, with: Entities::OrderDetails
     end
 
     desc "add produts to inventory"
@@ -43,13 +60,14 @@ class Api::V1::Orders < Grape::API
         authenticate_retailer!
         if params[:status] == "DELIVERED"
           order = Order.find_by(id: params[:id])
+          error!('Order not found', 404) unless order
           order = order.update_status(params)
           if order.status == "DELIVERED"
             puts "ended loop"
             order.create_inventory_transactions
             order.generate_rating_for_order
           else
-            {"message": "not updated"}
+            error!('Order status not updated', 401) 
           end    
         else
           error!("sorry , status can't be updated as #{params[:status]}")
@@ -62,15 +80,6 @@ class Api::V1::Orders < Grape::API
 
     
 
-    desc "get delivered orderes"
-    get "delivered" do
-      authenticate_retailer!
-
-      order = Order.where(retailer_id: Current.user, status: "DELIVERED")
-
-      present order, with: Entities::Order
-
-    end
     
     desc "get one order"
     get ":id" do
@@ -99,50 +108,5 @@ class Api::V1::Orders < Grape::API
           error!("Order not created", 401)
         end
     end
-
-      
-    desc 'Update order status, supplied quantity, and variant price'
-    params do
-      
-      requires :status, type: String, desc: 'Order Status'
-      optional :supplied_quantities, type: Array do
-        requires :variant_id, type: Integer, desc: 'Variant ID'
-        requires :supplied_quantity, type: Integer, desc: 'Supplied Quantity'
-        requires :price, type: Integer, desc: 'Price' 
-      end
-    end
-
-    # for supplier to update the order as SHIPPED 
-    put ':id' do
-
-      authenticate_supplier!
-
-      order = Order.find_by(id: params[:id])
-
-      error!('Order not found', 404) unless order
-
-      result = order.update_order(params)
-
-      if !result.persisted?
-          error!(result.errors.full_message.to_json,422)
-      end
-
-      present result, with: Entities::Order
-    end
-
-
-          
-        
-        
-
-       
-  
-    
-
-       
-       
-       
-
-        
-    end
+  end
 end
