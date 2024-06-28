@@ -21,13 +21,13 @@ class Api::V1::Inventory < Grape::API
         params do
             optional :page, type: Integer, default: 1, desc: "Page number"
             optional :per_page, type: Integer, default: 5, desc: "Transistions per page"
-            optional :type, type: String, desc: "transistion type [ IN , OUT ]"
+            optional :filter, type: String, desc: "transistion type [ IN , OUT ]"
         end
         get "transistions" do
 
             page = params[:page] || 1
             per_page = params[:per_page] || Kaminari.config.default_per_page
-            transition_type = params[:type]
+            transition_type = params[:filter]
             transistions = InventoryTransition.search(transition_type)
             transitions = paginate(transistions)
             present transitions, with: Api::Entities::Transistion

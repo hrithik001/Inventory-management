@@ -6,11 +6,11 @@ class InventoryTransition < ApplicationRecord
 
   def self.search(transition_type)
 
-      
+   
     transistion = if transition_type
-                        InventoryTransition.where(transition_type: transition_type)
+                        InventoryTransition.where(transition_type: transition_type,retailer_id: Current.user)
                   else
-                        InventoryTransition.all
+                        InventoryTransition.where(retailer_id: Current.user)
                   end
     transistion
 

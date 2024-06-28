@@ -84,7 +84,7 @@ class Api::V1::Orders < Grape::API
     desc "get one order"
     get ":id" do
         order = Order.find_by(id: params[:id])
-        present order, with: Entities::Order
+        present order, with: Entities::OrderDetails
     end
 
 

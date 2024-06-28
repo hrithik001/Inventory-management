@@ -7,17 +7,22 @@ class Api::V1::Supplier < Grape::API
             authenticate_supplier!
         end
 
+        
+
         desc "supplier profile"
         get do
             supplier = Supplier.get_user
             present supplier,with: Entities::Supplier
         end
+
+        desc "Edit Profile"
         put  do
             user = User.find_by(id: Current.user.id)
             if user
                 user.update_profile(params)
                 if user.persisted?
-                    present user,with: Entities::User
+                    supplier = Supplier.find_by(user_id: user.id)
+                    present supplier,with: Entities::Supplier
                 else
                     error!("user not updated",403)
                 end

@@ -63,7 +63,15 @@ class Api::V1::Users < Grape::API
             user = User.create_user(params)
             puts user.inspect
             if user.persisted?
-                present :user, user, with: Entities::User
+                
+                if user.role == 'SUPPLIER'
+
+                    supplier = Supplier.find_by(user_id: user.id)
+                    present supplier,with: Entities::Supplier
+
+                else
+                    present :user, user, with: Entities::User
+                end
             else
                error!(user.errors.full_messages.to_json, 422)
             end

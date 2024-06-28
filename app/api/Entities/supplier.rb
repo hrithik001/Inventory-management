@@ -1,5 +1,8 @@
 module Entities
     class Supplier < Grape::Entity
+        expose :id do |supplier|
+            supplier.user.id
+        end
         expose :name do |supplier|
             supplier.user.name
           end
