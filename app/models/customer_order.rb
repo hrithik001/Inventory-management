@@ -32,6 +32,8 @@ class CustomerOrder < ApplicationRecord
           return { insufficient_variants: can_fullfill }
         end
 
+        puts "can be fullfill_______________________________________________________-"
+
         ActiveRecord::Base.transaction do
           order = CustomerOrder.new(
             delivery_date: nil,
@@ -75,7 +77,9 @@ class CustomerOrder < ApplicationRecord
             end
             order.update!(total_amount: total_amount)
           else
+            puts "inside rollback___________________________________________"
             raise ActiveRecord::Rollback, "Order not saved"
+          
           end
           order
         end
@@ -84,17 +88,23 @@ class CustomerOrder < ApplicationRecord
 
     def self.check_variant_availability(params)
       insufficient_variants = []
+      retailer = User.find_by(id: params[:retailer_id])
+
+      if !retailer || retailer.role != "RETAILER"
+        insufficient_variants << { status: "Retailer not exists" }
+      else
   
-      params[:products].each do |product_params|
-        variant = Variant.find_by(id: product_params[:variant_id])
-        if variant
-          unless variant&.is_quantity_available?(product_params[:ordered_quantity])
-            insufficient_variants << { variant_id: variant.id, requested_quantity: product_params[:ordered_quantity], available_quantity: variant.quantity_available }
+        params[:products].each do |product_params|
+          variant = Variant.find_by(id: product_params[:variant_id])
+          if variant
+            unless variant&.is_quantity_available?(product_params[:ordered_quantity])
+              insufficient_variants << { variant_id: variant.id, requested_quantity: product_params[:ordered_quantity], available_quantity: variant.quantity_available }
+            end
+          else
+            insufficient_variants << { variant_id: product_params[:variant_id], status: "variant not exists"} 
           end
-        else
-          insufficient_variants << { variant_id: product_params[:variant_id], status: "variant not exists"} 
+          
         end
-        
       end
   
       insufficient_variants

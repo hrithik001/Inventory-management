@@ -40,6 +40,7 @@ class Variant < ApplicationRecord
   end
 
   def is_quantity_available?(requested_quantity)
+    puts "_________________________________quantity avilabel #{quantity_available}_ & requested quantity #{requested_quantity}_________________________________"
     quantity_available >= requested_quantity
   end
 

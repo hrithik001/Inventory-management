@@ -87,9 +87,9 @@ class Api::V1::Customer < Grape::API
 
                 if order.is_a?(CustomerOrder)
                     if order.persisted?
-                    present order,with: Entities::Order
+                     present order,with: Entities::Order
                     else
-                    error!(order.errors.full_messages.to_json, 422)
+                        error!(order.errors.full_messages.to_json, 422)
                     end
                 else
                     error!({ error: "Insufficient quantity for some variants", details: order[:insufficient_variants] }, 422)
