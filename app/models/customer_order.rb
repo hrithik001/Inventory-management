@@ -13,9 +13,9 @@ class CustomerOrder < ApplicationRecord
                         end
                     elsif Current.user&.role == "RETAILER"
                         if status
-                            CustomerOrder.where(status: status,retailer_id: Current.user)
+                            CustomerOrder.where(status: status)
                         else
-                            CustomerOrder.where(retailer_id: Current.user)
+                            CustomerOrder.all
                         end
                     end
     end
@@ -40,7 +40,7 @@ class CustomerOrder < ApplicationRecord
             order_date: DateTime.now,
             expected_delivery_date: DateTime.now + 3,
             customer_id: Current.user.id,
-            retailer_id: params[:retailer_id],
+            retailer_id: 1,
             status: "PENDING",
             total_amount: 0.00
           )
@@ -88,9 +88,9 @@ class CustomerOrder < ApplicationRecord
 
     def self.check_variant_availability(params)
       insufficient_variants = []
-      retailer = User.find_by(id: params[:retailer_id])
+      retailer = User.find_by(role: "RETAILER")
 
-      if !retailer || retailer.role != "RETAILER"
+      if !retailer 
         insufficient_variants << { status: "Retailer not exists" }
       else
   
@@ -128,16 +128,17 @@ class CustomerOrder < ApplicationRecord
     def fulfill_order
       self.customer_order_variants.each do |order_variant|
         variant = Variant.find(order_variant.variant_id)
-        inventory = variant.inventories.find_by(user_id: self.retailer_id)
+        inventory = Inventory.find_by(variant_id: variant.id)
+        
   
-        # inventory.update(quantity_available: inventory.quantity_available - order_variant.ordered_quantity)
+        
         inventory.decrease_quantity(order_variant.ordered_quantity)
         InventoryTransition.create!(
           transition_type: 'OUT',
           quantity: order_variant.ordered_quantity,
           transition_date: DateTime.now,
           variant_id: variant.id,
-          retailer_id: self.retailer_id
+          retailer_id: Current.user.id
         )
   
         order_variant.update(supplied_quantity: order_variant.ordered_quantity)

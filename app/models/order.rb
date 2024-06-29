@@ -31,7 +31,7 @@ class Order < ApplicationRecord
 
   def self.create_new(params)
 
-    return if valid_supplier?(params[:supplier_id])
+    return {error: "Either supplier not exists or there contract get over"} if valid_supplier?(params[:supplier_id])
     order = self.new(
       delivery_date: nil,
       order_date: DateTime.now,
@@ -99,6 +99,8 @@ class Order < ApplicationRecord
 
 
   def update_status(params)
+    return {error: "Already updated to this #{self.status}"} if self.status == params[:status]
+    
     self.update(status: params[:status])
     
     self
@@ -153,8 +155,12 @@ class Order < ApplicationRecord
   end
 
 
-  def self.shipped_orders
-    Order.where(retailer_id: Current.user,status: 'SHIPPED')
+  def self.shipped_orders(*order_id)
+    order = Order.where(status: "SHIPPED")
+    if !order_id.empty?
+      order = order.where(id: order_id.first)
+    end
+    order
   end
 
   def self.valid_supplier?(supplier_id)
@@ -165,8 +171,5 @@ class Order < ApplicationRecord
 
   end
 
-  def self.shipped_orders
-    Order.where(retailer_id: Current.user, status: "SHIPPED")
-  end
 
 end

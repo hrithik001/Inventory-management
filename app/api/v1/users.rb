@@ -24,16 +24,7 @@ class Api::V1::Users < Grape::API
             end
         
         end
-        desc "add a retailer or supplier"
-        params do
-            requires :name ,type: String
-            requires :email ,type: String
-            requires :password ,type: String
-            requires :password_confirmation, type: String
-            requires :role, type: String
-            optional :contact, type:String
-            optional :address, type: String
-        end
+        
         desc "edit the profile"
         params do
             optional :name ,type: String
@@ -54,6 +45,17 @@ class Api::V1::Users < Grape::API
                 error!("user not exists",404)
             end
             
+        end
+
+        desc "add a retailer or supplier"
+        params do
+            requires :name ,type: String
+            requires :email ,type: String
+            requires :password ,type: String
+            requires :password_confirmation, type: String
+            requires :role, type: String
+            optional :contact, type:String
+            optional :address, type: String
         end
         post "add" do
 

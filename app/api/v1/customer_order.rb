@@ -30,7 +30,7 @@ class Api::V1::CustomerOrder < Grape::API
 
 
 
-
+        desc "fullfill customer orders"
         params do
             requires :status, type: String, desc: "customer order status"
         end
@@ -39,6 +39,7 @@ class Api::V1::CustomerOrder < Grape::API
             customer_order = CustomerOrder.find_by(id: params[:id])
             status = params[:status]
             customer_order.manage_order(status)
+            present customer_order,with: Entities::CustomerOrderDetails
         end
 
 

@@ -47,7 +47,8 @@ class Api::V1::Orders < Grape::API
 
     desc "get particular shipped order details"
     get "shipped/:id" do
-        order = Order.shipped_orders
+        order_id = params[:id]
+        order = Order.shipped_orders(order_id)
 
         present order, with: Entities::OrderDetails
     end
@@ -59,15 +60,20 @@ class Api::V1::Orders < Grape::API
     put "shipped/:id" do
         authenticate_retailer!
         if params[:status] == "DELIVERED"
+          
           order = Order.find_by(id: params[:id])
           error!('Order not found', 404) unless order
           order = order.update_status(params)
-          if order.status == "DELIVERED"
+
+          if order[:error]
+            present order[:error]
+
+          elsif order.status == "DELIVERED"
             puts "ended loop"
             order.create_inventory_transactions
             order.generate_rating_for_order
-          else
-            error!('Order status not updated', 401) 
+            present order,with: Entities::OrderDetails
+          
           end    
         else
           error!("sorry , status can't be updated as #{params[:status]}")
@@ -100,12 +106,17 @@ class Api::V1::Orders < Grape::API
       authenticate_retailer!
         order = Order.create_new(params)
 
-        if order.is_a?(Array) 
-          error!(order.to_json, 422)
-        elsif order.persisted?
-          present order, with: Entities::Order
+        if order[:error]
+          present order[:error]
         else
-          error!("Order not created", 401)
+
+          if order.is_a?(Array) 
+            error!(order.to_json, 422)
+          elsif order.persisted?
+            present order, with: Entities::Order
+          else
+            error!("Order not created", 401)
+          end
         end
     end
   end

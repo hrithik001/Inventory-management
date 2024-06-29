@@ -8,9 +8,9 @@ class InventoryTransition < ApplicationRecord
 
    
     transistion = if transition_type
-                        InventoryTransition.where(transition_type: transition_type,retailer_id: Current.user)
+                        InventoryTransition.where(transition_type: transition_type)
                   else
-                        InventoryTransition.where(retailer_id: Current.user)
+                        InventoryTransition.all
                   end
     transistion
 

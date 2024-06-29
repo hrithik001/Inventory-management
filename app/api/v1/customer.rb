@@ -53,10 +53,7 @@ class Api::V1::Customer < Grape::API
 
                
                
-               { orders: orders , pagination: {
-                page: page,
-                per_page: per_page
-               }}
+               present orders,with: Entities::Order
             end
 
             desc "get order's details"
@@ -75,8 +72,7 @@ class Api::V1::Customer < Grape::API
 
             desc "Create a new order"
             params  do
-                requires :retailer_id, type: Integer, desc: "Retailer ID"
-                requires :products, type: Array[Hash], desc: "Array of product variants"
+               requires :products, type: Array[Hash], desc: "Array of product variants"
             end
             post do
                 
@@ -84,7 +80,7 @@ class Api::V1::Customer < Grape::API
                 order = CustomerOrder.create_new(params)
             
                   
-
+                
                 if order.is_a?(CustomerOrder)
                     if order.persisted?
                      present order,with: Entities::Order
